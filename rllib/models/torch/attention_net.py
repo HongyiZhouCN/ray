@@ -15,7 +15,7 @@ import tree  # pip install dm_tree
 from typing import Dict, Optional, Union
 
 from ray.rllib.models.modelv2 import ModelV2
-from ray.rllib.models.torch.misc import SlimFC
+from ray.rllib.models.torch.misc import SlimFC, AppendBiasLayer
 from ray.rllib.models.torch.modules import (
     GRUGate,
     RelativeMultiHeadAttention,
@@ -336,10 +336,13 @@ class AttentionWrapper(TorchModelV2, nn.Module):
         # values.
         self._logits_branch = SlimFC(
             in_size=self.attention_dim,
-            out_size=self.num_outputs,
+            out_size=self.num_outputs//2,
             activation_fn=None,
             initializer=torch.nn.init.xavier_uniform_,
         )
+
+        self._append_bias = AppendBiasLayer(self.num_outputs//2)
+
         self._value_branch = SlimFC(
             in_size=self.attention_dim,
             out_size=1,
@@ -439,7 +442,7 @@ class AttentionWrapper(TorchModelV2, nn.Module):
         input_dict["obs_flat"] = input_dict["obs"] = wrapped_out
 
         self._features, memory_outs = self.gtrxl(input_dict, state, seq_lens)
-        model_out = self._logits_branch(self._features)
+        model_out = self._append_bias(self._logits_branch(self._features))
         return model_out, memory_outs
 
     @override(ModelV2)
@@ -454,4 +457,4 @@ class AttentionWrapper(TorchModelV2, nn.Module):
     @override(ModelV2)
     def value_function(self) -> TensorType:
         assert self._features is not None, "Must call forward() first!"
-        return torch.reshape(self._value_branch(self._features), [-1])
+        return torch.reshape(self._value_branch(self._features.detach()), [-1])
