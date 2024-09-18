@@ -457,4 +457,4 @@ class AttentionWrapper(TorchModelV2, nn.Module):
     @override(ModelV2)
     def value_function(self) -> TensorType:
         assert self._features is not None, "Must call forward() first!"
-        return torch.reshape(self._value_branch(self._features.detach()), [-1])
+        return torch.reshape(self._value_branch(self._features), [-1])
