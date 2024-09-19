@@ -350,6 +350,11 @@ class AttentionWrapper(TorchModelV2, nn.Module):
             initializer=torch.nn.init.xavier_uniform_,
         )
 
+        ###
+        # self._value_layers = nn.Sequential(SlimFC(in_size=self.attention_dim, out_size=self.attention_dim, activation_fn=nn.Tanh),
+        #                                    SlimFC(in_size=self.attention_dim, out_size=self.attention_dim, activation_fn=nn.Tanh),
+        #                                    self._value_branch)
+
         self.view_requirements = self.gtrxl.view_requirements
         self.view_requirements["obs"].space = self.obs_space
 
@@ -458,3 +463,4 @@ class AttentionWrapper(TorchModelV2, nn.Module):
     def value_function(self) -> TensorType:
         assert self._features is not None, "Must call forward() first!"
         return torch.reshape(self._value_branch(self._features), [-1])
+        # return torch.reshape(self._value_layers(self._features.detach()), [-1])
