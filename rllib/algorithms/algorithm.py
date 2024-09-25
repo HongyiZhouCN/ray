@@ -2930,7 +2930,7 @@ class Algorithm(Checkpointable, Trainable, AlgorithmBase):
             algorithm=self, metrics_logger=self.metrics, result=result
         )
         # Then log according to Trainable's logging logic.
-        Trainable.log_result(self, result)
+        # Trainable.log_result(self, result)
 
     @override(Trainable)
     def cleanup(self) -> None:
